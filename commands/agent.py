@@ -74,11 +74,18 @@ THINKING_MESSAGES = [
 ]
 
 
-def think(gemini_client: GeminiClient, user_goal: str, user_id: int = None) -> str:
+def think(gemini_client: GeminiClient, user_goal: str, user_id: int = None, silent_mode: bool = False) -> str:
     """
     The upgraded core "thinking" loop with a sliding window memory to prevent token limits.
+    
+    Args:
+        gemini_client: The Gemini AI client
+        user_goal: The user's request/goal
+        user_id: User identifier for authorization checks
+        silent_mode: If True, suppresses console output (for web UI). Default False (CLI shows output)
     """
-    console.print(Panel(f"[bold]New Goal:[/bold] {user_goal}", border_style="green", title="Agent Activated", expand=False))
+    if not silent_mode:
+        console.print(Panel(f"[bold]New Goal:[/bold] {user_goal}", border_style="green", title="Agent Activated", expand=False))
 
     tool_descriptions = "\n".join([
         f"- {name}{inspect.signature(func)}: {func.__doc__.strip().splitlines()[0] if func.__doc__ else 'No description available.'}"
@@ -103,27 +110,37 @@ def think(gemini_client: GeminiClient, user_goal: str, user_id: int = None) -> s
     max_history_turns = 3
     max_turns = 10 
 
-    with console.status("[bold green]Agent is thinking...[/bold green]", spinner="dots") as status:
+    # Only show spinner in CLI mode
+    if not silent_mode:
+        status = console.status("[bold green]Agent is thinking...[/bold green]", spinner="dots")
+        status.start()
+    
+    try:
         for turn in range(max_turns):
-            status.update(random.choice(THINKING_MESSAGES))
-            console.print(f"\n[bold magenta]--- Agent Turn {turn + 1}/{max_turns} ---[/bold magenta]")
+            if not silent_mode:
+                status.update(random.choice(THINKING_MESSAGES))
+                console.print(f"\n[bold magenta]--- Agent Turn {turn + 1}/{max_turns} ---[/bold magenta]")
 
             recent_turns = turn_history[-max_history_turns:]
             full_prompt = permanent_prompt_part + "\n\n" + "\n".join(recent_turns)
             
             ai_response_text = gemini_client.generate_text(full_prompt)
-            console.print(Panel(ai_response_text, title="Agent's Thought Process", border_style="cyan", expand=False))
+            
+            if not silent_mode:
+                console.print(Panel(ai_response_text, title="Agent's Thought Process", border_style="cyan", expand=False))
 
             if "Final Answer:" in ai_response_text:
                 final_answer = ai_response_text.split("Final Answer:", 1)[1].strip()
-                console.print(Panel(f"[bold green]Goal Achieved![/bold green]\n{final_answer}", title="Task Completed", border_style="green", expand=False))
+                if not silent_mode:
+                    console.print(Panel(f"[bold green]Goal Achieved![/bold green]\n{final_answer}", title="Task Completed", border_style="green", expand=False))
                 return final_answer
 
             tool_call_match = re.search(r'```json\n(.*?)\n```', ai_response_text, re.DOTALL)
             
             if not tool_call_match:
                 error_feedback = "Error: Invalid response format. You must provide a 'Thought' and then a 'Tool' in a JSON code block. Please try again."
-                console.print(f"[bold red]{error_feedback}[/bold red]")
+                if not silent_mode:
+                    console.print(f"[bold red]{error_feedback}[/bold red]")
                 turn_history.append(f"AI_RESPONSE:\n{ai_response_text}\nSYSTEM_FEEDBACK: {error_feedback}")
                 continue
 
@@ -135,12 +152,14 @@ def think(gemini_client: GeminiClient, user_goal: str, user_id: int = None) -> s
                     raise ValueError("Missing 'tool_name' or 'args' is not an object.")
             except (json.JSONDecodeError, ValueError) as e:
                 error_feedback = f"Error: The JSON for the tool call was malformed: {e}. Please correct the JSON structure and try again."
-                console.print(f"[bold red]{error_feedback}[/bold red]")
+                if not silent_mode:
+                    console.print(f"[bold red]{error_feedback}[/bold red]")
                 turn_history.append(f"AI_RESPONSE:\n{ai_response_text}\nSYSTEM_FEEDBACK: {error_feedback}")
                 continue
 
-            status.update(f"[bold yellow]Executing: {tool_name}...[/bold yellow]")
-            console.print(f"[bold yellow]Using Tool:[/bold yellow] {tool_name} with args: {tool_args}")
+            if not silent_mode:
+                status.update(f"[bold yellow]Executing: {tool_name}...[/bold yellow]")
+                console.print(f"[bold yellow]Using Tool:[/bold yellow] {tool_name} with args: {tool_args}")
             
             action_func = ACTION_REGISTRY.get(tool_name)
             tool_output = ""
@@ -159,10 +178,15 @@ def think(gemini_client: GeminiClient, user_goal: str, user_id: int = None) -> s
                     tool_output = f"Error during tool execution: {e}"
 
             tool_output_str = str(tool_output)
-            console.print(Panel(tool_output_str, title=f"Tool Output ({tool_name})", border_style="yellow", expand=False))
+            if not silent_mode:
+                console.print(Panel(tool_output_str, title=f"Tool Output ({tool_name})", border_style="yellow", expand=False))
             
             current_turn_summary = f"AI_RESPONSE:\n{ai_response_text}\nTOOL_RESULT:\n{tool_output_str}"
             turn_history.append(current_turn_summary)
+    finally:
+        if not silent_mode:
+            status.stop()
 
-    console.print("[bold red]Agent reached maximum turns without a final answer.[/bold red]")
+    if not silent_mode:
+        console.print("[bold red]Agent reached maximum turns without a final answer.[/bold red]")
     return "The agent could not complete the task after multiple steps. Please try rephrasing your goal."
