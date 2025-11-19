@@ -74,7 +74,7 @@ THINKING_MESSAGES = [
 ]
 
 
-def think(gemini_client: GeminiClient, user_goal: str, user_id: int = None, silent_mode: bool = False) -> str:
+def think(gemini_client: GeminiClient, user_goal: str, user_id: int = None, silent_mode: bool = True) -> str:
     """
     The upgraded core "thinking" loop with a sliding window memory to prevent token limits.
     
@@ -82,7 +82,7 @@ def think(gemini_client: GeminiClient, user_goal: str, user_id: int = None, sile
         gemini_client: The Gemini AI client
         user_goal: The user's request/goal
         user_id: User identifier for authorization checks
-        silent_mode: If True, suppresses console output (for web UI). Default False (CLI shows output)
+        silent_mode: If True, suppresses console output (for web UI). Default True (suppresses output)
     """
     if not silent_mode:
         console.print(Panel(f"[bold]New Goal:[/bold] {user_goal}", border_style="green", title="Agent Activated", expand=False))
