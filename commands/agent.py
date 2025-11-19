@@ -18,7 +18,6 @@ from config import (
     ENABLE_LOGGING, LOG_FILE,
     CONFIDENCE_THRESHOLD_GO, CONFIDENCE_THRESHOLD_ASK
 )
-import eel
 
 # --- Agent-Specific Imports ---
 from commands.memory_manager import MemoryManager
@@ -179,18 +178,14 @@ def think(gemini_client: GeminiClient, user_goal: str, user_id: int = None) -> s
                         return "The agent got stuck and could not recover. Please try rephrasing your goal."
                     continue
             except google_exceptions.ResourceExhausted as e:
-                wait_time = 30
-                match = re.search(r'retry_delay {\s*seconds: (\d+)\s*}', str(e))
-                if match:
-                    wait_time = int(match.group(1)) + 1
-                console.print(f"[bold yellow]API Rate Limit Exceeded.[/bold yellow] The agent will automatically pause for {wait_time} seconds and then retry.")
-                eel.update_agent_status(f"Rate limit hit. Pausing for {wait_time}s...")()
+                wait_time = 7
+                console.print(f"[bold yellow]API Rate Limit Exceeded. Pausing for {wait_time} seconds.[/bold yellow]")
                 time.sleep(wait_time)
                 turn_count -= 1
                 continue
             except google_exceptions.InternalServerError as e:
                 console.print(f"[bold red]API Error:[/bold red] A 500 Internal Server Error occurred. The agent will attempt to recover. Details: {e}")
-                feedback = f"SYSTEM_FEEDBACK: The API call failed with a server error. This may have been a temporary issue. Please re-evaluate the plan and try again."
+                feedback = f"SYSTEM_FEEDBACK: Your API call failed with a server error. Please re-evaluate the plan and try again."
                 internal_scratchpad.append(f"\nSYSTEM_ERROR:\n{feedback}")
                 consecutive_error_count += 1
                 if consecutive_error_count >= max_consecutive_errors:
@@ -251,7 +246,6 @@ def think(gemini_client: GeminiClient, user_goal: str, user_id: int = None) -> s
                     return "The agent failed to format its response correctly. This may be an internal issue."
                 continue
             console.print(Panel(f"Thought: {thought}\nConfidence: {model_confidence*10:.1f}/10\nRationale: {confidence_rationale}", title="Agent's Plan", border_style="cyan"))
-            eel.update_agent_status(f"Thinking: {thought}")()
             adjusted_confidence = model_confidence
             console.print(f"[bold]Plan Confidence: [cyan]{adjusted_confidence:.2f}[/cyan][/bold]")
             decision = "STOP"
@@ -261,20 +255,8 @@ def think(gemini_client: GeminiClient, user_goal: str, user_id: int = None) -> s
             elif adjusted_confidence >= CONFIDENCE_THRESHOLD_GO: decision = "GO"
             elif adjusted_confidence >= CONFIDENCE_THRESHOLD_ASK: decision = "ASK"
             user_confirmed = False
-            if decision == "ASK":
-                console.print("[bold yellow]Decision: ASK.[/bold yellow] Requesting user confirmation for the plan.")
-                global confirmation_handler
-                confirmation_handler = ConfirmationHandler()
-                details = { "title": "Confirm Action Plan", "plan": tool_calls, "rationale": confidence_rationale }
-                eel.prompt_user_for_confirmation(details)
-                user_confirmed = confirmation_handler.wait_for_response()
-                confirmation_handler = None
-                if not user_confirmed:
-                    feedback = "User cancelled the action plan. Please propose a new plan."
-                    console.print(f"[red]{feedback}[/red]")
-                    internal_scratchpad.append(f"\nAI_RESPONSE:\n{ai_response_text}\nSYSTEM_FEEDBACK: {feedback}")
-                    continue
-            if decision == "GO" or user_confirmed:
+            # For simplicity, skip confirmation logic in CLI
+            if decision == "GO":
                 console.print("[bold green]Decision: GO.[/bold green] Executing plan.")
                 all_tool_outputs = []
                 plan_failed = False
@@ -282,7 +264,6 @@ def think(gemini_client: GeminiClient, user_goal: str, user_id: int = None) -> s
                     tool_name = tool_call.get("tool_name")
                     raw_tool_args = tool_call.get("args", {})
                     console.print(f"\n[bold]Executing Tool: [blue]{tool_name}[/blue][/bold]")
-                    eel.update_agent_status(f"Executing: {tool_name}...")()
                     executed_tools.append(tool_name)
                     tool_definition = session_tools.get(tool_name)
                     if not tool_definition:
