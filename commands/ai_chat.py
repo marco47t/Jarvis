@@ -1,4 +1,3 @@
-# commands/ai_chat.py
 import json
 import logging
 import os
@@ -17,18 +16,20 @@ from config import (AI_TEMPERATURE, DEFAULT_AI_MODEL, ENABLE_LOGGING,
                     get_daily_memory_file_path)
 
 # --- Logger Setup ---
-if ENABLE_LOGGING:
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-                        handlers=[
-                            logging.FileHandler(LOG_FILE, encoding='utf-8'),
-                            logging.StreamHandler()
-                        ])
+def setup_logger(web_mode=False):
     logger = logging.getLogger(__name__)
-else:
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.CRITICAL + 1)
-    logger.propagate = False
+    if web_mode:
+        # Disable all logging to stdout for web
+        logger.handlers = []
+        logger.setLevel(logging.CRITICAL + 1)
+        logger.propagate = False
+    else:
+        logging.basicConfig(level=logging.INFO,
+                            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                            handlers=[logging.FileHandler(LOG_FILE, encoding='utf-8')])
+    return logger
+
+logger = setup_logger(web_mode=True)
 
 class GeminiClient:
     def __init__(self):
@@ -142,4 +143,3 @@ class GeminiClient:
                 return f"An unexpected error occurred: {e}"
         
         return "An unexpected error occurred after exhausting all retries."
-    
