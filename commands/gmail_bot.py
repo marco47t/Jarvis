@@ -1,4 +1,3 @@
-# commands/gmail_bot.py
 import threading
 import time
 import logging
@@ -102,3 +101,16 @@ class GmailBot:
             self.important_emails = [e for e in self.important_emails if e.get("id") != email_id]
             self.other_emails = [e for e in self.other_emails if e.get("id") != email_id]
             logger.info(f"Dismissed email with ID: {email_id}")
+
+    # NEW TOOL: Search and fetch emails by keyword or query
+    def search_emails(self, query: str, max_results: int = 25) -> List[Dict]:
+        """
+        Searches Gmail for emails using a custom query string.
+        Returns a list of emails matching the query.
+        """
+        try:
+            results = search_and_fetch_emails(query, max_results=max_results)
+            return results
+        except Exception as e:
+            logger.error(f"Error searching emails with query '{query}': {e}", exc_info=True)
+            return []
