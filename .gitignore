@@ -1,0 +1,21 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Project folders
+audio_responses/
+Backup/
+build/
+data/
+dist/
+scripts/
+web/audio/
+
+# Credentials and tokens
+.env
+token.json
+credentials.json
+google-credentials.json

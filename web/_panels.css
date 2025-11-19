@@ -1,0 +1,285 @@
+/* FILE: _panels.css */
+
+/* --- Notification & Inbox System Styles --- */
+.user-actions {
+    position: relative; /* This is required for absolute positioning of panels */
+}
+@keyframes panel-enter {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+#notifications-panel, #inbox-panel {
+    position: absolute;
+    top: 80px;
+    width: 380px;
+    max-height: 50vh;
+    background-color: var(--card-bg-color);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(200, 200, 200, 0.2);
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(31, 38, 135, 0.2);
+    z-index: 100;
+    color: var(--text-color);
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    transform: translateY(-20px);
+}
+#notifications-panel {
+    right: 25px;
+}
+#inbox-panel {
+    right: 85px; /* Position next to notifications panel */
+    width: 420px;
+    z-index: 99;
+}
+#notifications-panel.visible, #inbox-panel.visible {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+#notifications-panel h3, #inbox-panel h3 {
+    margin: 0;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 1.1em;
+    font-weight: 500;
+    flex-shrink: 0;
+}
+#notifications-list, #inbox-list {
+    list-style: none;
+    padding: 10px;
+    margin: 0;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+/* --- Panel List Item Styles --- */
+@keyframes item-enter {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+@keyframes item-exit {
+    from { opacity: 1; max-height: 100px; transform: scaleY(1); }
+    to { opacity: 0; max-height: 0; transform: scaleY(0); padding-top: 0; padding-bottom: 0; margin-bottom: 0; }
+}
+
+#notifications-list li, #inbox-list li {
+    background-color: rgba(255, 255, 255, 0.05);
+    padding: 12px 15px;
+    font-size: 0.9em;
+    border: 1px solid rgba(200, 200, 200, 0.1);
+    border-radius: 10px;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+    animation: item-enter 0.4s ease-out;
+    transform-origin: top;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+#notifications-list li:hover, #inbox-list li:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+#notifications-list li.removing, #inbox-list li.removing {
+    animation: item-exit 0.4s ease-out forwards;
+}
+.notification-content, .email-content {
+    flex-grow: 1;
+    overflow: hidden;
+}
+.notification-sender, .email-sender {
+    font-weight: 500;
+    display: block;
+    color: var(--primary-color);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.notification-subject, .email-subject {
+    font-size: 0.95em;
+    display: block;
+    color: #555;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.dismiss-btn {
+    font-family: sans-serif;
+    font-weight: bold;
+    color: #888;
+    cursor: pointer;
+    padding: 2px 5px;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+.dismiss-btn:hover {
+    background-color: rgba(255, 0, 0, 0.15);
+    color: #ff4d4d;
+}
+
+/* --- Dark Theme Adjustments for Panels --- */
+body.theme-night-clear #notifications-panel,
+body.theme-night-cloudy #notifications-panel,
+body.theme-sunset #notifications-panel,
+body.theme-rain #notifications-panel,
+body.theme-night-clear #inbox-panel,
+body.theme-night-cloudy #inbox-panel,
+body.theme-sunset #inbox-panel,
+body.theme-rain #inbox-panel {
+    background-color: rgba(44, 62, 80, 0.85);
+    color: #e0e7ff;
+    border-color: rgba(224, 231, 255, 0.2);
+}
+body.theme-night-clear #notifications-panel h3,
+body.theme-night-cloudy #notifications-panel h3,
+body.theme-sunset #notifications-panel h3,
+body.theme-rain #notifications-panel h3,
+body.theme-night-clear #inbox-panel h3,
+body.theme-night-cloudy #inbox-panel h3,
+body.theme-sunset #inbox-panel h3,
+body.theme-rain #inbox-panel h3 {
+    border-bottom-color: rgba(224, 231, 255, 0.2);
+}
+body.theme-night-clear .notification-subject,
+body.theme-night-cloudy .notification-subject,
+body.theme-sunset .notification-subject,
+body.theme-rain .notification-subject,
+body.theme-night-clear .email-subject,
+body.theme-night-cloudy .email-subject,
+body.theme-sunset .email-subject,
+body.theme-rain .email-subject {
+    color: #c1d1f0;
+}
+body.theme-night-clear .dismiss-btn,
+body.theme-night-cloudy .dismiss-btn,
+body.theme-sunset .dismiss-btn,
+body.theme-rain .dismiss-btn {
+    color: #9eb3d9;
+}
+body.theme-night-clear .dismiss-btn:hover,
+body.theme-night-cloudy .dismiss-btn:hover,
+body.theme-sunset .dismiss-btn:hover,
+body.theme-rain .dismiss-btn:hover {
+    color: #ff7070;
+}
+
+#history-sidebar {
+    position: fixed; top: 0; left: 0; width: 320px; height: 100vh;
+    background: rgba(20, 25, 30, 0.85); /* Slightly darker, richer background */
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1); z-index: 1001;
+    display: flex; flex-direction: column;
+    transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    color: #e0e7ff;
+}
+#history-overlay {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.3);
+    z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.4s ease;
+}
+body.history-active #history-sidebar { transform: translateX(0); }
+body.history-active #history-overlay { opacity: 1; pointer-events: auto; }
+
+.history-header {
+    display: flex; justify-content: space-between; align-items: center; padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1); flex-shrink: 0;
+}
+.history-header h3 { margin: 0; font-size: 1.2em; font-weight: 500; }
+#close-history-btn { font-size: 1.8em; font-weight: 300; padding: 0 10px; }
+
+.history-content { flex-grow: 1; overflow-y: auto; padding: 5px 0; }
+/* --- Custom Scrollbar for Sidebar --- */
+.history-content::-webkit-scrollbar { width: 8px; }
+.history-content::-webkit-scrollbar-track { background: transparent; }
+.history-content::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.2); border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
+.history-content::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.4); }
+
+#history-list { list-style: none; padding: 0 10px; margin: 0; }
+
+#history-list li {
+    padding: 13px 15px; /* Added more vertical padding */
+    border-radius: 8px; cursor: pointer; transition: background-color 0.2s ease;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.95em;
+    position: relative; /* For positioning the delete button */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07); /* Subtle separator */
+}
+#history-list li:last-child { border-bottom: none; }
+
+#history-list li:not(.history-date-header):hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+.history-date-header {
+    font-size: 0.8em; font-weight: 600; color: #a7b7d4;
+    padding: 18px 15px 8px 15px; text-transform: uppercase; letter-spacing: 0.5px;
+    cursor: default; border-bottom: none; margin-top: 5px;
+}
+.history-date-header:first-child { margin-top: 0; }
+
+.delete-chat-btn {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    font-family: sans-serif; font-weight: bold; color: #8a9bb8;
+    padding: 2px 8px; border-radius: 50%; opacity: 0;
+    transition: all 0.2s ease;
+}
+#history-list li:hover .delete-chat-btn { opacity: 1; }
+.delete-chat-btn:hover { background-color: rgba(229, 62, 62, 0.2); color: #ff8a8a; }
+
+/* --- Styles for Actionable Notifications --- */
+.notification-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.btn-approve {
+    background-color: rgba(67, 160, 71, 0.2);
+    color: #81c784;
+    border: 1px solid #81c784;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.8em;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-approve:hover {
+    background-color: #43a047;
+    color: white;
+}
+
+.notification-sender {
+    font-weight: 500;
+    color: var(--primary-color);
+}
+.notification-subject {
+    font-size: 0.95em;
+    color: #555; /* Adjust color for light/dark theme as needed */
+    display: block;
+}
+
+/* Dark theme adjustments */
+body.theme-night-clear .btn-approve,
+body.theme-night-cloudy .btn-approve,
+body.theme-sunset .btn-approve,
+body.theme-rain .btn-approve {
+    background-color: rgba(129, 199, 132, 0.2);
+}
+body.theme-night-clear .btn-approve:hover,
+body.theme-night-cloudy .btn-approve:hover,
+body.theme-sunset .btn-approve:hover,
+body.theme-rain .btn-approve:hover {
+    background-color: #66bb6a;
+}
