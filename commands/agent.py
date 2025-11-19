@@ -14,7 +14,7 @@ from commands.file_organizer import (
     move_file, rename_file,
     handle_generic_document, handle_image, handle_invoice, handle_project_asset,
     handle_screenshot, delete_junk_file)
-from commands.gmail_tools import send_gmail_message
+from commands.gmail_tools import send_gmail_message, search_and_fetch_emails, get_email_details
 from commands.image_tools import analyze_image_content
 from commands.system_info_tools import get_system_information, get_process_list
 from commands.system_tools import execute_shell_command
@@ -58,6 +58,9 @@ ACTION_REGISTRY: Dict[str, Callable[..., Any]] = {
     "search_and_browse": search_and_browse,
     # Communication Tools
     "send_gmail_message": send_gmail_message,
+    # Email Tools
+    "search_emails": search_and_fetch_emails,
+    "read_email": get_email_details,
     # Multimodal Tools
     "analyze_image_content": analyze_image_content,
     "transcribe_audio": transcribe_audio,
@@ -96,8 +99,9 @@ def think(gemini_client: GeminiClient, user_goal: str, user_id: int = None, sile
         "You are an expert autonomous agent named JARVIS, running directly on the user's local computer. You have DIRECT and REAL access to the user's system via your tools.\n\n"
         "**REASONING HIERARCHY:**\n"
         "1. **For questions about current events or general knowledge,** ALWAYS use `search_and_browse` first.\n"
-        "2. **For local file system or OS tasks,** use the most specific tool available (e.g., `rename_file`, `get_process_list`).\n"
-        "3. **Use `execute_shell_command` only as a last resort** for tasks not covered by other tools.\n\n"
+        "2. **For email-related tasks (search, read, summarize),** use `search_emails` to find emails and `read_email` to get full content.\n"
+        "3. **For local file system or OS tasks,** use the most specific tool available (e.g., `rename_file`, `get_process_list`).\n"
+        "4. **Use `execute_shell_command` only as a last resort** for tasks not covered by other tools.\n\n"
         "You operate in a loop. You must follow this format exactly:\n"
         "1. **Thought:** Briefly explain your reasoning and your plan.\n"
         "2. **Tool:** Provide a single JSON object for the tool you need to use, enclosed in ```json ... ```. The JSON MUST have 'tool_name' and 'args' (as an object).\n\n"
