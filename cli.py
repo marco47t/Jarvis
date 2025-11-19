@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """
 Jarvis CLI - Simplified for Modern (Standalone) Agent
-- Minimal setup, clear feedback, robust error handling
-- Fully compatible with the new agent (no eel, headless, rate limit friendly)
+Clean, robust, and independent: Only pull what you actually use.
 """
 
 import os
@@ -20,7 +19,6 @@ init(autoreset=True)
 console = Console()
 
 try:
-    from config import CHATS_DIR
     from commands.ai_chat import GeminiClient
     from commands import agent
 except ImportError as e:
