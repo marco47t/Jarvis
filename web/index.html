@@ -17,7 +17,6 @@
     <!-- Markdown Conversion Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
 
-    <!-- Main Stylesheet -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -52,22 +51,9 @@
         <!-- Global Profile Button -->
         <div class="global-profile-button" id="profile-btn"></div>
         
-        <div class="welcome-screen-actions">
-            <button id="welcome-notifications-button" class="icon-button">
-                <!-- SVG is the same as notifications-button -->
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M20 17H4V16C4 13.2386 6.23858 11 9 11H15C17.7614 11 20 13.2386 20 16V17ZM12 2C13.3807 2 14.5 3.11929 14.5 4.5V8.5C14.5 9.88071 13.3807 11 12 11C10.6193 11 9.5 9.88071 9.5 8.5V4.5C9.5 3.11929 10.6193 2 12 2Z M12 22C13.1046 22 14 21.1046 14 20H10C10 21.1046 10.8954 22 12 22Z"/></svg>
-                <span id="welcome-notification-dot" class="hidden"></span>
-            </button>
-            <button id="welcome-inbox-button" class="icon-button">
-                <!-- SVG is the same as inbox-button -->
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M3 3H21C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3ZM20 7.23792L12.0718 14.338L4 7.21544V19H20V7.23792ZM4.51146 5L12.0619 11.662L19.501 5H4.51146Z"></path></svg>
-                <span id="welcome-inbox-dot" class="hidden"></span>
-            </button>
-        </div>
         <div class="welcome-container">
             <h1 class="welcome-title" id="greeting">Hello, User</h1>
         </div>
-        <div id="briefing-notifications-panel"></div>
 
         <div class="main-content">
             <header class="main-header">
@@ -77,7 +63,6 @@
                         <path d="M12 10.586l4.95-4.95 1.414 1.414-4.95 4.95 4.95 4.95-1.414 1.414-4.95-4.95-4.95 4.95-1.414-1.414 4.95-4.95-4.95-4.95L7.05 5.636z"/>
                     </svg>
                 </button>
-                <div id="agent-status-bar" class="agent-status"></div>
                 <div class="user-actions">
                     <!-- Theme Selector -->
                     <div id="theme-selector-container">
@@ -111,15 +96,8 @@
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M3 3H21C21.5523 3 22 3.44772 22 4V20C22 20.5523 21.5523 21 21 21H3C2.44772 21 2 20.5523 2 20V4C2 3.44772 2.44772 3 3 3ZM20 7.23792L12.0718 14.338L4 7.21544V19H20V7.23792ZM4.51146 5L12.0619 11.662L19.501 5H4.51146Z"></path></svg>
                         <span id="inbox-dot" class="hidden"></span>
                     </button>
-                    <button id="briefing-button" class="icon-button" title="Morning Briefing">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
-                            <path d="M12 7a5 5 0 100 10 5 5 0 000-10zM12 4a1 1 0 011 1v1a1 1 0 11-2 0V5a1 1 0 011-1zm0 14a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM4 12a1 1 0 01-1-1H2a1 1 0 110-2h1a1 1 0 011 1zm14 0a1 1 0 01-1-1h-1a1 1 0 110-2h1a1 1 0 011 1zM6.343 6.343a1 1 0 011.414 0l.707.707a1 1 0 01-1.414 1.414l-.707-.707a1 1 0 010-1.414zm11.314 0a1 1 0 010 1.414l-.707.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM6.343 17.657a1 1 0 010-1.414l.707-.707a1 1 0 111.414 1.414l-.707.707a1 1 0 01-1.414 0zm11.314 0a1 1 0 01-1.414 0l-.707-.707a1 1 0 011.414-1.414l.707.707a1 1 0 010 1.414z"/>
-                        </svg>
-                    </button>
                 </div>
-                <button id="history-button" class="icon-button" style="margin-left: 15px;">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C21.9939 10.3394 21.4024 8.76189 20.354 7.546L14.474 13.426V13.425C14.2238 13.6924 13.8813 13.8436 13.518 13.8436C13.1547 13.8436 12.8122 13.6924 12.562 13.425L7.938 8.801L7.93899 8.80001C7.68882 8.5326 7.55179 8.17551 7.55179 7.80001C7.55179 7.4245 7.68882 7.06741 7.93899 6.80001C8.43934 6.29966 9.26068 6.29966 9.76103 6.80001L12.761 9.80001L18.474 4.088C17.0232 2.76566 15.0973 2.00004 13 2H12ZM13 4.06202V8.06202H9V10.062H13V12.062L17 8.06202L13 4.06202Z"/></svg>
-                    </button>
+
             </header>
             
             <div class="content-body">
@@ -132,18 +110,6 @@
                     <li>No recent activity.</li>
                 </ul>
         </div>
-        <div id="history-sidebar">
-            <div class="history-header">
-                <h3>Chat History</h3>
-                <button id="close-history-btn" class="icon-button">&times;</button>
-            </div>
-            <div class="history-content">
-                <ul id="history-list">
-                    <!-- Content will be generated by JavaScript -->
-                </ul>
-            </div>
-        </div>
-        <div id="history-overlay"></div>
         <div id="inbox-panel" class="hidden">
             <h3>Recent Mail</h3>
             <ul id="inbox-list">
@@ -165,48 +131,15 @@
         <div id="footer-temp-container"></div>
     </div>
     
-    <div id="visual-query-overlay" class="hidden">
-        <input id="visual-query-input" type="text" placeholder="Ask about the selection..." autocomplete="off" onclick="event.stopPropagation()">
-    </div>
-
     <div class="modal-overlay" id="profile-modal">
         <div class="modal-content"><div class="profile-modal-header"><div class="profile-picture" id="profile-pic-display"></div><input type="file" id="profile-pic-input" accept="image/*"><div class="profile-info"><h3>Your Profile</h3><input type="text" id="profile-name-input" placeholder="Enter your name"></div></div><div class="modal-buttons"><button class="btn btn-secondary" id="profile-close-btn">Close</button><button class="btn btn-tertiary" id="open-settings-btn">Settings</button><button class="btn btn-primary" id="profile-save-btn">Save</button></div></div>
     </div>
     <div class="modal-overlay" id="settings-overlay">
         <div class="settings-page"><div class="settings-header"><h2>Application Settings</h2><button class="btn btn-secondary" id="settings-back-btn">Back</button></div><div class="settings-section"><h3>API Keys & IDs</h3><div class="setting-item"><label for="setting-gemini-api-key">Gemini API Key</label><div class="input-wrapper"><input type="text" id="setting-gemini-api-key" placeholder="Enter Gemini API Key"></div></div><div class="setting-item"><label for="setting-google-cse-api-key">Google Search API Key</label><div class="input-wrapper"><input type="text" id="setting-google-cse-api-key" placeholder="Enter Google Search API Key"></div></div><div class="setting-item"><label for="setting-google-cse-engine-id">Google Search Engine ID</label><div class="input-wrapper"><input type="text" id="setting-google-cse-engine-id" placeholder="Enter Google Search Engine ID"></div></div><div class="setting-item"><label for="setting-telegram-bot-token">Telegram Bot Token</label><div class="input-wrapper"><input type="text" id="setting-telegram-bot-token" placeholder="Enter Telegram Bot Token"></div></div><div class="setting-item"><label for="setting-telegram-admin-id">Telegram Admin User ID</label><div class="input-wrapper"><input type="text" id="setting-telegram-admin-id" placeholder="Enter Telegram Admin User ID"></div></div><div class="setting-item"><label for="setting-weather-api-key">Weather API Key</label><div class="input-wrapper"><input type="text" id="setting-weather-api-key" placeholder="Enter Weather API Key"></div></div></div><div class="settings-section"><h3>AI Model Settings</h3><div class="setting-item"><label for="setting-default-ai-model">Default AI Model</label><div class="input-wrapper"><input type="text" id="setting-default-ai-model" placeholder="e.g., gemini-1.5-flash"></div></div><div class="setting-item"><label for="setting-vision-model-name">Vision Model</label><div class="input-wrapper"><input type="text" id="setting-vision-model-name" placeholder="e.g., gemini-1.5-pro"></div></div><div class="setting-item"><label for="setting-ai-temperature">AI Temperature</label><div class="input-wrapper"><input type="number" id="setting-ai-temperature" step="0.1" min="0" max="1"></div></div></div><div class="settings-section"><h3>Web Scraping</h3><div class="setting-item"><label for="setting-max-scrape-length">Max Scrape Content Length</label><div class="input-wrapper"><input type="number" id="setting-max-scrape-length" step="100" min="500"></div></div></div><div class="settings-buttons"><button class="btn btn-primary" id="settings-save-btn">Save Settings</button></div></div>
     </div>
-    <div class="modal-overlay" id="delete-confirm-modal">
-        <div class="modal-content">
-            <h3 id="delete-confirm-title">Delete Chat</h3>
-            <p id="delete-confirm-message">Are you sure you want to permanently delete this chat?</p>
-            <div class="modal-buttons">
-                <button class="btn btn-secondary" id="delete-cancel-btn">Cancel</button>
-                <button class="btn btn-danger" id="delete-confirm-btn">Delete</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- =================================================================== -->
-    <!-- NEW/UPDATED MODAL SECTION -->
-    <!-- =================================================================== -->
-
-    <!-- NEW: Confirmation Modal for the Agent -->
-    <div id="confirmationModal" class="modal-overlay" style="display:none;">
-        <div class="modal-content">
-            <h2 id="confirmationTitle">Confirm Action</h2>
-            <div id="confirmationDetails" class="modal-details">
-                <!-- Details will be populated by JavaScript -->
-            </div>
-            <div class="modal-buttons">
-                <button id="cancelBtn" class="modal-btn cancel">Cancel</button>
-                <button id="confirmBtn" class="modal-btn confirm">Confirm</button>
-            </div>
-        </div>
-    </div>
 
     <!-- Container for custom toast notifications -->
     <div id="toast-container"></div>
-    
     <!-- NEW: Email Viewer Modal -->
     <div class="modal-overlay" id="email-viewer-modal">
         <div class="modal-content" id="email-viewer-content">
@@ -215,29 +148,13 @@
                     <p><strong>From:</strong> <span id="email-viewer-from"></span></p>
                     <p><strong>Subject:</strong> <span id="email-viewer-subject"></span></p>
                 </div>
-                
-                <div class="modal-buttons" style="margin-top: 0;">
-                    <button class="btn btn-tertiary" id="email-viewer-open-btn" style="display: none;">Open</button>
-                    <button class="btn btn-secondary" id="email-viewer-close-btn">Close</button>
-                </div>
-                
+                <button class="btn btn-secondary" id="email-viewer-close-btn">Close</button>
             </div>
             <pre class="email-viewer-body" id="email-viewer-body"></pre>
         </div>
     </div>
 
-    <!-- =================================================================== -->
-    <!-- END OF MODAL SECTION -->
-    <!-- =================================================================== -->
-
-    <script src="/eel.js"></script>
-    <script src="js/eel_bindings.js"></script>
-    <script src="js/theme_handler.js"></script>
-    <script src="js/chat_handler.js"></script>
-    <script src="js/ui_components.js"></script>
-    <script src="js/history_handler.js"></script> <!-- ADD THIS LINE -->
-
-    <!-- main.js must be the last script to run -->
-    <script src="js/main.js"></script>
+    <script type="text/javascript" src="/eel.js"></script>
+    <script type="text/javascript" src="script.js"></script>
 </body>
 </html>

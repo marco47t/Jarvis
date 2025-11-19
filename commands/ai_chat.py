@@ -2,21 +2,23 @@
 import json
 import logging
 import os
+import time
 import traceback
-import uuid
-from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import google.generativeai as genai
-from google.generativeai.types import (HarmCategory, HarmBlockThreshold)
+import httpx
+from google.api_core import exceptions
+from google.generativeai.types import (HarmCategory, HarmBlockThreshold,
+                                        StopCandidateException)
 
 from config import (AI_TEMPERATURE, DEFAULT_AI_MODEL, ENABLE_LOGGING,
                     GEMINI_API_KEY, LOG_FILE, MAX_RESPONSE_TOKENS,
-                    CHATS_DIR)
+                    get_daily_memory_file_path)
 
 # --- Logger Setup ---
 if ENABLE_LOGGING:
-    logging.basicConfig(level=logging.INFO,
+    logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                         handlers=[
                             logging.FileHandler(LOG_FILE, encoding='utf-8'),
@@ -28,16 +30,14 @@ else:
     logger.setLevel(logging.CRITICAL + 1)
     logger.propagate = False
 
-
 class GeminiClient:
     def __init__(self):
-        """Initializes the Gemini AI client and the chat session management."""
+        """Initializes the Gemini AI client and conversation history."""
         if not GEMINI_API_KEY or "YOUR_GOOGLE_GEMINI_API_KEY" in GEMINI_API_KEY:
             raise ValueError("GEMINI_API_KEY is not set in config.py or environment variables.")
 
         genai.configure(api_key=GEMINI_API_KEY)
         self.model_name = DEFAULT_AI_MODEL
-        # This base model is used for stateless generation tasks (like agent reasoning, title generation).
         self.model = genai.GenerativeModel(
             model_name=self.model_name,
             generation_config={
@@ -51,101 +51,95 @@ class GeminiClient:
                 HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_ONLY_HIGH,
             }
         )
-        
-        # Manages the state of the current user-facing chat
-        self.current_chat_id: str = None
-        self.history: List[Dict] = []
-        self.start_new_chat()
-
+        self.history = self._load_memory()
+        self.chat = self.model.start_chat(history=self.history)
         logger.info(f"GeminiClient initialized with model: {self.model_name}")
+        logger.debug(f"Loaded {len(self.history)} entries into chat history.")
 
-    def start_new_chat(self):
-        """Starts a new, empty chat session with a unique ID."""
-        self.current_chat_id = str(uuid.uuid4())
-        self.history = []
-        logger.info(f"Started new chat session with ID: {self.current_chat_id}")
+    def _load_memory(self) -> List[Dict[str, any]]:
+        """Loads conversation history from the daily memory file."""
+        memory_file = get_daily_memory_file_path()
+        if os.path.exists(memory_file):
+            try:
+                with open(memory_file, 'r', encoding='utf-8') as f:
+                    loaded_history = json.load(f)
+                if isinstance(loaded_history, list):
+                    logger.info(f"Loaded {len(loaded_history)} entries from {memory_file}.")
+                    return loaded_history
+                else:
+                    logger.warning(f"Memory file {memory_file} is not a list. Starting fresh.")
+                    return []
+            except (json.JSONDecodeError, IOError) as e:
+                logger.error(f"Error loading memory from {memory_file}: {e}. Starting fresh.")
+                return []
+        return []
 
-    def load_chat_session(self, chat_id: str) -> bool:
-        """Loads a previous chat session from its JSON file into the history list."""
-        chat_file_path = self._get_chat_filepath(chat_id)
-        if not chat_file_path:
-            logger.error(f"Could not load chat {chat_id}, file not found.")
-            return False
+    def _save_memory(self):
+        """Saves the current conversation history to the daily memory file."""
+        memory_file = get_daily_memory_file_path()
         try:
-            with open(chat_file_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                self.history = data.get('history', [])
-            self.current_chat_id = chat_id
-            logger.info(f"Successfully loaded chat session: {chat_id}")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to load chat session {chat_id}: {e}", exc_info=True)
-            self.start_new_chat() # Fallback to a clean state
-            return False
-            
+            with open(memory_file, 'w', encoding='utf-8') as f:
+                serializable_history = [
+                    {'role': msg.role, 'parts': [part.text for part in msg.parts]}
+                    for msg in self.chat.history
+                ]
+                json.dump(serializable_history, f, indent=2, ensure_ascii=False)
+            logger.debug(f"Saved {len(self.chat.history)} entries to {memory_file}.")
+        except (IOError, TypeError) as e:
+            logger.error(f"Error saving memory to {memory_file}: {e}")
+
     def generate_text(self, prompt: str) -> str:
         """
-        Generates a response using the base model without affecting the chat history.
-        This is used for non-chat tasks like generating titles or the agent's internal reasoning.
+        Sends a prompt to the Gemini model and returns the response.
+        Manages history and implements a retry mechanism for transient errors.
         """
-        try:
-            response = self.model.generate_content(prompt)
-            if response.parts:
-                return "".join(part.text for part in response.parts)
-            else:
-                finish_reason = response.candidates[0].finish_reason if response.candidates else "UNKNOWN"
-                logger.error(f"Error in stateless generate_text: No content part returned. Finish Reason: {finish_reason.name}")
-                return f"Error: Model returned no content (Reason: {finish_reason.name})."
-        except Exception as e:
-            logger.error(f"Error in stateless generate_text: {e}")
-            return f"Error: {e}"
+        max_retries = 4
+        for i in range(max_retries):
+            try:
+                logger.info(f"Sending prompt to AI (attempt {i+1}/{max_retries}): '{prompt[:200]}...'")
+                response = self.chat.send_message(prompt)
 
-    def add_turn_to_history(self, user_message: str, model_message: str):
-        """
-        Adds a clean user/model turn to the current chat history and saves it.
-        This is the primary method for updating the user-facing chat log.
-        """
-        # --- FIX: Store history in the canonical format ---
-        self.history.append({'role': 'user', 'parts': [{'text': user_message}]})
-        self.history.append({'role': 'model', 'parts': [{'text': model_message}]})
-        self._save_chat_session()
+                if not response.parts:
+                    finish_reason = response.candidates[0].finish_reason if response.candidates else 'N/A'
+                    logger.warning(f"AI response was empty (no parts). Finish Reason: {finish_reason}")
+                    return "AI returned an empty response. This may be due to a content filter or the model finishing its turn without a text output."
 
-    def _save_chat_session(self):
-        """Saves the current conversation history list to its session file."""
-        if not self.current_chat_id:
-            return
+                ai_response_text = response.text
+                logger.info(f"AI response received: '{ai_response_text[:200]}...'")
+                
+                self._save_memory()
+                return ai_response_text
 
-        chat_file_path = os.path.join(CHATS_DIR, f"{self.current_chat_id}.json")
-        is_new_chat = not os.path.exists(chat_file_path)
-        title = "New Chat"
-
-        # If this is the first time saving this chat, generate a title
-        if is_new_chat and self.history:
-            first_user_prompt = self.history[0]['parts'][0]['text'] # Updated to access text property
-            title_prompt = f"Create a very short, concise title (4-5 words max) for a chat that begins with this prompt: '{first_user_prompt}'. Respond with only the title."
-            title = self.generate_text(title_prompt).strip().replace('"', '').replace('*', '')
-
-        try:
-            # If the file already exists, read it to preserve the title and timestamp
-            existing_data = {}
-            if not is_new_chat:
-                with open(chat_file_path, 'r', encoding='utf-8') as f:
-                    existing_data = json.load(f)
+            except (exceptions.InternalServerError, exceptions.ServiceUnavailable, exceptions.ResourceExhausted) as e:
+                if i < max_retries - 1:
+                    wait_time = 2 ** (i + 1)
+                    error_type = type(e).__name__
+                    logger.warning(f"API Error ({error_type}): {e}. Retrying in {wait_time}s...")
+                    time.sleep(wait_time)
+                else:
+                    logger.error(f"API error after {max_retries} retries: {e}")
+                    return f"The AI service is currently unavailable or busy after multiple retries ({type(e).__name__}). Please try again later."
             
-            chat_data = {
-                "id": self.current_chat_id,
-                "title": existing_data.get('title', title),
-                "timestamp": existing_data.get('timestamp', datetime.utcnow().isoformat()),
-                "history": self.history
-            }
-            
-            with open(chat_file_path, 'w', encoding='utf-8') as f:
-                json.dump(chat_data, f, indent=2, ensure_ascii=False)
-            logger.debug(f"Saved chat session {self.current_chat_id}")
-        except Exception as e:
-            logger.error(f"Error saving chat session {self.current_chat_id}: {e}")
+            except (genai.types.BlockedPromptException, StopCandidateException) as e:
+                logger.error(f"AI response blocked due to safety concerns: {e}")
+                return "AI response blocked due to safety concerns. Please rephrase your query or adjust the safety settings."
 
-    def _get_chat_filepath(self, chat_id: str):
-        """Helper to find a chat file by its ID."""
-        path = os.path.join(CHATS_DIR, f"{chat_id}.json")
-        return path if os.path.exists(path) else None
+            except httpx.ReadTimeout:
+                logger.error("AI request timed out.")
+                return "The AI took too long to respond. Please try again."
+            
+            except ValueError as e:
+                if "response.text" in str(e):
+                    finish_reason = response.candidates[0].finish_reason if response.candidates else 'N/A'
+                    logger.warning(f"AI response had no content parts. Finish Reason: {finish_reason}. Error: {e}")
+                    return "AI returned a response with no valid text content. This can happen if the model's turn ends without generating text."
+                else:
+                    logger.error(f"A ValueError occurred during AI text generation: {e}\n{traceback.format_exc()}")
+                    return f"An unexpected Value error occurred: {e}"
+
+            except Exception as e:
+                logger.error(f"An unexpected error occurred during AI text generation: {e}\n{traceback.format_exc()}")
+                return f"An unexpected error occurred: {e}"
+        
+        return "An unexpected error occurred after exhausting all retries."
+    

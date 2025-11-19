@@ -1,0 +1,101 @@
+/* web/base.css */
+
+:root {
+    --primary-color: #5d5dff;
+    --text-color: #333;
+    --card-bg: rgba(255, 255, 255, 0.95);
+    --border-color: #e0e0e0;
+    --background-gradient: linear-gradient(-45deg, #d4e7ff, #f3e7ff, #ffe9e9, #d4e7ff);
+    --card-bg-color: rgba(255, 255, 255, 0.9);
+    --input-bg-color: #fff;
+    --input-text-color: #444;
+}
+body {
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    margin: 0; padding: 0; overflow: hidden; font-size: 14px;
+}
+@keyframes gradient-animation {
+    0% { background-position: 0% 50%; background-size: 300% 300%; }
+    50% { background-position: 100% 50%; background-size: 200% 200%; }
+    100% { background-position: 0% 50%; background-size: 300% 300%; }
+}
+.background-container {
+    background: var(--background-gradient);
+    background-size: 300% 300%; animation: gradient-animation 20s ease-in-out infinite;
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    transition: filter 0.7s ease-in-out, background 1s ease;
+    z-index: 1; overflow: hidden;
+}
+body.chat-active .background-container { filter: blur(20px); }
+
+@keyframes typing { from { width: 0 } to { width: 100% } }
+@keyframes blink-caret { from, to { border-color: transparent } 50% { border-color: #6a8dff; } }
+
+/* --- Welcome Screen Layout --- */
+.welcome-container {
+    position: absolute; top: 40%; left: 50%;
+    transform: translate(-50%, -50%); text-align: center;
+    transition: all 0.5s cubic-bezier(0.65, 0, 0.35, 1); opacity: 1;
+}
+.welcome-title {
+    font-size: 4em; font-weight: 500; letter-spacing: 2px;
+    background: linear-gradient(90deg, #6a8dff, #a16aff, #ff6a9e, #6a8dff);
+    background-size: 200% auto; background-clip: text;
+    -webkit-background-clip: text; color: transparent;
+    overflow: hidden; white-space: nowrap; border-right: 4px solid #6a8dff;
+    animation: typing 2s steps(16, end), blink-caret .75s step-end infinite;
+}
+body.chat-active .welcome-container { opacity: 0; transform: translate(-50%, -60%); pointer-events: none; }
+
+.input-form {
+    position: absolute; width: 500px; display: flex; align-items: center;
+    top: 55%; left: 50%; transform: translate(-50%, -50%);
+    transition: all 0.5s cubic-bezier(0.65, 0, 0.35, 1);
+}
+#footer-temp-container {
+    position: absolute; left: 50%; top: 65%;
+    transform: translate(-50%, -50%);
+    z-index: 20; opacity: 1;
+    transition: all 0.5s cubic-bezier(0.65, 0, 0.35, 1);
+    pointer-events: none;
+}
+body.chat-active #footer-temp-container { opacity: 0; }
+
+/* --- Main Chat Window Layout --- */
+.app-container {
+    position: relative; z-index: 2; width: 100%; height: 100vh;
+    display: flex; justify-content: center; align-items: center;
+}
+.main-content {
+    width: 100%; max-width: 900px; height: 90vh;
+    background-color: var(--card-bg-color); border-radius: 20px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    display: flex; flex-direction: column; opacity: 0;
+    transform: scale(0.95);
+    transition: all 0.5s cubic-bezier(0.65, 0, 0.35, 1);
+    pointer-events: none;
+}
+body.chat-active .main-content { opacity: 1; transform: scale(1); pointer-events: auto; }
+
+/* --- Input Field Styles --- */
+@keyframes pulse-placeholder {
+    0%, 100% { color: rgba(0, 0, 0, 0.4); }
+    50% { color: rgba(0, 0, 0, 0.6); }
+}
+body:not(.chat-active) #main-input::placeholder { animation: pulse-placeholder 2.5s ease-in-out infinite; }
+body.chat-active .input-form { width: calc(100% - 60px); max-width: 840px; top: auto; bottom: 30px; }
+#main-input {
+    flex-grow: 1; border: 1px solid rgba(180, 190, 210, 0.7); background: rgba(255, 255, 255, 0.4);
+    padding: 15px 25px; border-radius: 30px;
+    outline: none; font-size: 1.1em; color: #444; transition: all 0.5s ease;
+    text-align: center;
+}
+#main-input:focus { box-shadow: 0 0 10px rgba(106, 141, 255, 0.3); }
+body.chat-active #main-input {
+    background-color: var(--input-bg-color);
+    border: 1px solid var(--border-color);
+    color: var(--input-text-color);
+    text-align: left;
+}
