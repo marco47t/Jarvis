@@ -53,6 +53,20 @@ document.addEventListener("DOMContentLoaded", function() {
     let isPanelOpen = false;
     let isInboxOpen = false;
 
+    // --- Suppress console logs from markdown-it and other libraries ---
+    const originalConsoleLog = console.log;
+    console.log = function(...args) {
+        // Filter out markdown-it debug logs
+        const message = args.join(' ');
+        if (message.includes('markdown_it') || 
+            message.includes('StateBlock') || 
+            message.includes('entering') || 
+            message.includes('DEBUG')) {
+            return;
+        }
+        originalConsoleLog.apply(console, args);
+    };
+
     // --- Function exposed to Python for the shortcut ---
     eel.expose(toggle_recording_from_shortcut);
     function toggle_recording_from_shortcut() {
@@ -86,7 +100,6 @@ document.addEventListener("DOMContentLoaded", function() {
     // --- Widget Display Function ---
     function displayWeather(data) {
         if (!data || data.error || data.status === 'error') {
-            console.error("Weather data error:", data.message || data.error);
             weatherWidgetContainer.innerHTML = '';
             if (!isChatActive) { footerTempContainer.innerHTML = ''; }
             return;
@@ -163,7 +176,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 emailViewerBody.textContent = details.body;
             }
         } catch (err) {
-            console.error("Failed to fetch email content:", err);
             emailViewerBody.textContent = "An error occurred while fetching the email.";
         }
     }
@@ -352,7 +364,6 @@ document.addEventListener("DOMContentLoaded", function() {
             displayWeather(weatherData);
             updateTheme(weatherData);
         } catch (error) {
-            console.error("Failed to fetch weather data:", error);
             updateTheme(null);
         }
     }
@@ -402,7 +413,12 @@ document.addEventListener("DOMContentLoaded", function() {
         messageElement.classList.add("chat-message", "ai-message");
         chatDisplay.appendChild(messageElement);
         const onTypingComplete = () => {
-            const converter = new showdown.Converter({ noHeaderId: true, simpleLineBreaks: true, strikethrough: true, tables: true });
+            const converter = new showdown.Converter({ 
+                noHeaderId: true, 
+                simpleLineBreaks: true, 
+                strikethrough: true, 
+                tables: true 
+            });
             messageElement.innerHTML = converter.makeHtml(text);
             messageElement.querySelectorAll('pre code').forEach((block) => {
                 hljs.highlightElement(block);
@@ -452,13 +468,11 @@ document.addEventListener("DOMContentLoaded", function() {
                     userMessages[userMessages.length - 1].textContent = result.transcription;
                     processApiResponse(result.final_answer);
                 } catch (error) {
-                    console.error("Error processing audio:", error);
                     processApiResponse("Sorry, there was an error transcribing your voice message.");
                 }
                 audioChunks = [];
             };
         } catch (err) {
-            console.error("Error accessing microphone:", err);
             messageInput.placeholder = "Microphone access denied.";
             isRecording = false;
         }
@@ -489,7 +503,6 @@ document.addEventListener("DOMContentLoaded", function() {
         eel.run_agent_think(messageText)().then((final_answer) => {
             processApiResponse(final_answer);
         }).catch((error) => {
-            console.error("An error occurred with the Eel call:", error);
             processApiResponse("Sorry, an error occurred while connecting to the agent.");
         });
     }
